@@ -2,7 +2,9 @@ package live.lkml.productservice.controller;
 
 import live.lkml.productservice.entity.Product;
 import live.lkml.productservice.repository.ProductRepository;
+import live.lkml.productservice.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,15 +14,30 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductController {
 
-    private final ProductRepository productRepository;
+    private final ProductService productService;
 
     @PostMapping
-    public Product create(@RequestBody Product product){
-        return productRepository.save(product);
+    public ResponseEntity<Product> create(@RequestBody Product product){
+        return ResponseEntity.ok(productService.create(product));
     }
 
     @GetMapping
-    public List<Product> getAll(){
-        return productRepository.findAll();
+    public ResponseEntity<List<Product>> getAll(){
+        return ResponseEntity.ok(productService.getAll());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Product> getById(@PathVariable Long id){
+        return ResponseEntity.ok(productService.getById(id));
+    }
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable Long id){
+        productService.delete(id);
+    }
+
+    @PutMapping("/{id}/reduce-stock")
+    public ResponseEntity<Void> reduceStock(@PathVariable Long id, @RequestParam Integer quantity) {
+        productService.reduceStock(id, quantity);
+        return ResponseEntity.ok().build();
     }
 }
