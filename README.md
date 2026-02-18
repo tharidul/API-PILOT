@@ -1,4 +1,4 @@
-# API-PILOT — Spring Boot Microservices
+# Spring Microservices Pilot — Spring Boot Microservices
 
 A microservices project built with Spring Boot, Spring Cloud, and Netflix Eureka.
 
