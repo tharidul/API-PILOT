@@ -25,6 +25,15 @@ public class ProductService {
     public void delete(Long id){
         productRepository.deleteById(id);
     }
+
+    public Product update(Long id,Product product){
+        Product existingProduct = getById(id);
+        existingProduct.setName(product.getName());
+        existingProduct.setPrice(product.getPrice());
+        existingProduct.setStock(product.getStock());
+        return productRepository.save(existingProduct);
+    }
+
     public void reduceStock(Long id, Integer quantity){
         Product product = getById(id);
 

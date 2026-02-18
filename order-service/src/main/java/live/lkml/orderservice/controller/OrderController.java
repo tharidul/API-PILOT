@@ -25,4 +25,13 @@ public class OrderController {
     public ResponseEntity<List<Order>> getAllOrders() {
         return ResponseEntity.ok(orderService.getAllOrders());
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Order> getOrderById(@PathVariable Long id) {
+        return ResponseEntity.ok(orderService.getOrderById(id));
+    }
+    @DeleteMapping("/{id}")
+    public void deleteOrderById(@PathVariable Long id) {
+        orderService.deleteOrderById(id);
+    }
 }
