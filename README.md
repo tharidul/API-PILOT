@@ -1,6 +1,6 @@
-# Spring Microservices Pilot — Spring Boot Microservices
+# Spring Microservices Pilot
 
-A microservices project built with Spring Boot, Spring Cloud, and Netflix Eureka.
+A pilot project to explore and test microservice architecture using Spring Boot and Spring Cloud.
 
 ## Architecture
 
@@ -38,10 +38,10 @@ A microservices project built with Spring Boot, Spring Cloud, and Netflix Eureka
 - **Spring Boot 3.4.2**
 - **Spring Cloud 2024.0.1**
 - **Spring Cloud Gateway**
-- **Netflix Eureka** (Service Discovery)
-- **OpenFeign** (Inter-service communication)
+- **Netflix Eureka**
+- **OpenFeign**
 - **Spring Data JPA**
-- **MariaDB** (Product Service & Order Service)
+- **MariaDB**
 - **Lombok**
 
 ---
@@ -52,15 +52,7 @@ A microservices project built with Spring Boot, Spring Cloud, and Netflix Eureka
 
 - Java 21
 - Maven
-- MySQL / MariaDB running locally
-- Git
-
-### Clone the Repository
-
-```bash
-git clone https://github.com/tharidul/API-PILOT.git
-cd API-PILOT
-```
+- MariaDB running locally
 
 ### Database Setup
 
@@ -73,37 +65,28 @@ CREATE DATABASE orderdb;
 
 ```bash
 # 1. Eureka Server
-cd eureka-server
-./mvnw spring-boot:run
+cd eureka-server && ./mvnw spring-boot:run
 
 # 2. Product Service
-cd ../product-service
-./mvnw spring-boot:run
+cd product-service && ./mvnw spring-boot:run
 
 # 3. Order Service
-cd ../order-service
-./mvnw spring-boot:run
+cd order-service && ./mvnw spring-boot:run
 
 # 4. API Gateway
-cd ../api-gateway
-./mvnw spring-boot:run
+cd api-gateway && ./mvnw spring-boot:run
 ```
 
-### Verify Services
-
-Open Eureka Dashboard: `http://localhost:8761`
-
-You should see `API-GATEWAY`, `PRODUCT-SERVICE`, and `ORDER-SERVICE` all registered and UP.
+Verify at Eureka Dashboard: `http://localhost:8761`
 
 ---
 
 ## API Endpoints
 
-All requests go through the **API Gateway on port 8080**.
+All requests go through the API Gateway on port `8080`.
 
-All responses follow this standard format:
+### Standard Response Format
 
-**Success:**
 ```json
 {
     "success": true,
@@ -111,17 +94,6 @@ All responses follow this standard format:
     "data": { }
 }
 ```
-
-**Error:**
-```json
-{
-    "success": false,
-    "message": "Error description",
-    "data": null
-}
-```
-
----
 
 ### Product Service
 
@@ -132,13 +104,8 @@ All responses follow this standard format:
 | `GET` | `/product-service/products/{id}` | Get product by ID |
 | `PUT` | `/product-service/products/{id}` | Update a product |
 | `DELETE` | `/product-service/products/{id}` | Delete a product |
-| `PUT` | `/product-service/products/{id}/reduce-stock` | Reduce product stock |
 
 #### Create Product
-
-```
-POST /product-service/products
-```
 ```json
 {
     "name": "Gaming Mouse",
@@ -147,22 +114,6 @@ POST /product-service/products
     "stock": 10
 }
 ```
-
-#### Update Product
-
-```
-PUT /product-service/products/1
-```
-```json
-{
-    "name": "Gaming Mouse Pro",
-    "price": 1500.0,
-    "description": "Upgraded gaming mouse",
-    "stock": 20
-}
-```
-
----
 
 ### Order Service
 
@@ -174,10 +125,6 @@ PUT /product-service/products/1
 | `DELETE` | `/order-service/orders/{id}` | Delete an order |
 
 #### Create Order
-
-```
-POST /order-service/orders
-```
 ```json
 {
     "productId": 1,
@@ -185,58 +132,12 @@ POST /order-service/orders
 }
 ```
 
-When an order is created, the system will:
-1. Validate the product exists in Product Service
-2. Check if stock is sufficient
-3. Calculate total price automatically (`price × quantity`)
-4. Reduce product stock
-5. Save and return the order
-
----
-
-## Project Structure
-
-```
-API-PILOT/
-├── api-gateway/
-│   └── src/main/resources/application.properties
-├── eureka-server/
-│   └── src/main/resources/application.properties
-├── product-service/
-│   └── src/main/java/live/lkml/productservice/
-│       ├── controller/ProductController.java
-│       ├── service/ProductService.java
-│       ├── repository/ProductRepository.java
-│       ├── entity/Product.java
-│       └── dto/
-│           ├── request/ProductRequestDTO.java
-│           └── response/ProductResponseDTO.java
-└── order-service/
-    └── src/main/java/live/lkml/orderservice/
-        ├── controller/OrderController.java
-        ├── service/OrderService.java
-        ├── repository/OrderRepository.java
-        ├── entity/Order.java
-        ├── client/ProductClient.java
-        └── dto/
-            ├── request/OrderRequestDTO.java
-            └── response/
-                ├── OrderResponseDTO.java
-                └── ProductClientResponse.java
-```
-
----
-
-## Inter-Service Communication
-
-Order Service calls Product Service directly via **OpenFeign** using Eureka service discovery.
-
-A dedicated `/internal/{id}` endpoint is used for Feign calls to return raw product data, while the public `/products/{id}` returns the standard wrapped response:
-
-```
-External clients  →  /products/{id}           → wrapped ProductResponseDTO
-Internal Feign    →  /products/internal/{id}  → raw Product (no wrapper)
-```
+When an order is created:
+1. Validates product exists
+2. Checks stock is sufficient
+3. Calculates total price (`price × quantity`)
+4. Reduces product stock
+5. Saves and returns the order
 
 ---
 
@@ -245,7 +146,14 @@ Internal Feign    →  /products/internal/{id}  → raw Product (no wrapper)
 - Duplicate product names are not allowed
 - Orders cannot be placed if stock is insufficient
 - Stock is automatically reduced when an order is placed
-- Total price is auto-calculated (`price × quantity`)
+
+---
+
+## Inter-Service Communication
+
+Order Service calls Product Service via **OpenFeign** using Eureka service discovery.
+
+A dedicated `/internal/{id}` endpoint is used for Feign calls returning raw product data, while the public endpoint returns the standard wrapped response.
 
 ---
 
