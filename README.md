@@ -41,8 +41,7 @@ A microservices project built with Spring Boot, Spring Cloud, and Netflix Eureka
 - **Netflix Eureka** (Service Discovery)
 - **OpenFeign** (Inter-service communication)
 - **Spring Data JPA**
-- **MariaDB** (Order Service)
-- **MySQL** (Product Service)
+- **MariaDB** (Product Service & Order Service)
 - **Lombok**
 
 ---
