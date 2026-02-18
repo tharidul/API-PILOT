@@ -3,7 +3,7 @@ package live.lkml.orderservice.dto.response;
 import lombok.Data;
 
 @Data
-public class ProductResponse {
+public class ProductClientResponseDTO {
 
     private Long id;
     private String name;
