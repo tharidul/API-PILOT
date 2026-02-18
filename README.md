@@ -45,6 +45,8 @@ A microservices project built with Spring Boot, Spring Cloud, and Netflix Eureka
 - **MySQL** (Product Service)
 - **Lombok**
 
+---
+
 ## Getting Started
 
 ### Prerequisites
@@ -59,6 +61,13 @@ A microservices project built with Spring Boot, Spring Cloud, and Netflix Eureka
 ```bash
 git clone https://github.com/tharidul/API-PILOT.git
 cd API-PILOT
+```
+
+### Database Setup
+
+```sql
+CREATE DATABASE productdb;
+CREATE DATABASE orderdb;
 ```
 
 ### Start Services (in order)
@@ -83,15 +92,37 @@ cd ../api-gateway
 
 ### Verify Services
 
-Open Eureka Dashboard: http://localhost:8761
+Open Eureka Dashboard: `http://localhost:8761`
 
-You should see `API-GATEWAY`, `PRODUCT-SERVICE`, and `ORDER-SERVICE` all registered.
+You should see `API-GATEWAY`, `PRODUCT-SERVICE`, and `ORDER-SERVICE` all registered and UP.
 
 ---
 
 ## API Endpoints
 
 All requests go through the **API Gateway on port 8080**.
+
+All responses follow this standard format:
+
+**Success:**
+```json
+{
+    "success": true,
+    "message": "Success",
+    "data": { }
+}
+```
+
+**Error:**
+```json
+{
+    "success": false,
+    "message": "Error description",
+    "data": null
+}
+```
+
+---
 
 ### Product Service
 
@@ -104,17 +135,35 @@ All requests go through the **API Gateway on port 8080**.
 | `DELETE` | `/product-service/products/{id}` | Delete a product |
 | `PUT` | `/product-service/products/{id}/reduce-stock` | Reduce product stock |
 
-#### Create Product Example
+#### Create Product
 
-```json
+```
 POST /product-service/products
+```
+```json
 {
     "name": "Gaming Mouse",
     "price": 1200.0,
-    "description": "Gaming mouse",
+    "description": "High precision gaming mouse",
     "stock": 10
 }
 ```
+
+#### Update Product
+
+```
+PUT /product-service/products/1
+```
+```json
+{
+    "name": "Gaming Mouse Pro",
+    "price": 1500.0,
+    "description": "Upgraded gaming mouse",
+    "stock": 20
+}
+```
+
+---
 
 ### Order Service
 
@@ -125,10 +174,12 @@ POST /product-service/products
 | `GET` | `/order-service/orders/{id}` | Get order by ID |
 | `DELETE` | `/order-service/orders/{id}` | Delete an order |
 
-#### Create Order Example
+#### Create Order
 
-```json
+```
 POST /order-service/orders
+```
+```json
 {
     "productId": 1,
     "quantity": 2
@@ -137,9 +188,10 @@ POST /order-service/orders
 
 When an order is created, the system will:
 1. Validate the product exists in Product Service
-2. Calculate total price automatically
-3. Reduce product stock
-4. Save and return the order
+2. Check if stock is sufficient
+3. Calculate total price automatically (`price × quantity`)
+4. Reduce product stock
+5. Save and return the order
 
 ---
 
@@ -156,7 +208,10 @@ API-PILOT/
 │       ├── controller/ProductController.java
 │       ├── service/ProductService.java
 │       ├── repository/ProductRepository.java
-│       └── entity/Product.java
+│       ├── entity/Product.java
+│       └── dto/
+│           ├── request/ProductRequestDTO.java
+│           └── response/ProductResponseDTO.java
 └── order-service/
     └── src/main/java/live/lkml/orderservice/
         ├── controller/OrderController.java
@@ -165,39 +220,33 @@ API-PILOT/
         ├── entity/Order.java
         ├── client/ProductClient.java
         └── dto/
-            ├── request/OrderRequest.java
-            └── response/ProductResponse.java
+            ├── request/OrderRequestDTO.java
+            └── response/
+                ├── OrderResponseDTO.java
+                └── ProductClientResponse.java
 ```
+
+---
 
 ## Inter-Service Communication
 
-Order Service calls Product Service directly via **OpenFeign** (not through the gateway):
+Order Service calls Product Service directly via **OpenFeign** using Eureka service discovery.
+
+A dedicated `/internal/{id}` endpoint is used for Feign calls to return raw product data, while the public `/products/{id}` returns the standard wrapped response:
 
 ```
-Order Service → Feign → PRODUCT-SERVICE (Eureka load-balanced)
+External clients  →  /products/{id}           → wrapped ProductResponseDTO
+Internal Feign    →  /products/internal/{id}  → raw Product (no wrapper)
 ```
 
-This means services talk to each other directly using service discovery — bypassing the gateway for internal communication.
+---
 
-## Configuration
+## Business Rules
 
-### API Gateway (`application.properties`)
-
-```properties
-spring.application.name=api-gateway
-server.port=8080
-eureka.client.service-url.defaultZone=http://localhost:8761/eureka/
-
-spring.cloud.gateway.routes[0].id=product-service
-spring.cloud.gateway.routes[0].uri=lb://PRODUCT-SERVICE
-spring.cloud.gateway.routes[0].predicates[0]=Path=/product-service/**
-spring.cloud.gateway.routes[0].filters[0]=StripPrefix=1
-
-spring.cloud.gateway.routes[1].id=order-service
-spring.cloud.gateway.routes[1].uri=lb://ORDER-SERVICE
-spring.cloud.gateway.routes[1].predicates[0]=Path=/order-service/**
-spring.cloud.gateway.routes[1].filters[0]=StripPrefix=1
-```
+- Duplicate product names are not allowed
+- Orders cannot be placed if stock is insufficient
+- Stock is automatically reduced when an order is placed
+- Total price is auto-calculated (`price × quantity`)
 
 ---
 
