@@ -159,4 +159,4 @@ A dedicated `/internal/{id}` endpoint is used for Feign calls returning raw prod
 
 ## Author
 
-**Tharidul** — [github.com/tharidul](https://github.com/tharidul)
+**Tharidu Lakmal** — [github.com/tharidul](https://github.com/tharidul)
